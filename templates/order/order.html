@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>订单</title>
+    <link type="text/css" rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap-theme.min.css">
+    <script type="text/javascript" src="/static/bootstrap-3.3.7-dist/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="/static/css/mycss.css">
+</head>
+<body>
+{# ~置顶导航栏 #}
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <ul class="container nav nav-pills">
+        <li role="presentation">
+            <div class="navbar-header col-lg-1">
+                <img alt="Brand" src="/static/image/logo.png">
+            </div>
+        </li>
+        <li role="presentation">
+            <a href="{% url 'home:home' %}">商品</a>
+        </li>
+        <li role="presentation">
+            <a href="{% url 'cart:cart' %}">购物车</a>
+        </li>
+        <li role="presentation" class="active">
+            <a href="{% url 'order:order' %}">订单</a>
+        </li>
+        <li role="presentation" class="dropdown navbar-right">
+            {% if request.user.is_authenticated %}
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                   aria-expanded="false">用户：{{ request.user.username }}<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url 'user:info' %}">用户信息</a></li>
+                    <li><a href="{% url 'user:logout' %}">退出登录</a></li>
+                </ul>
+            {% else %}
+                <a href="{% url 'order:order' %}">账号未登录，点击登录或注册</a>
+            {% endif %}
+        </li>
+    </ul>
+</div>
+
+{# 订单状态栏 #}
+<div class="container">
+    <ul class="nav nav-tabs act">
+        <li role="presentation"><a href="{% url 'order:order' %}">全部</a></li>
+        <li role="presentation"><a href="{% url 'order:order' status=0 %}">待付款</a></li>
+        <li role="presentation"><a href="{% url 'order:order' status=1 %}">待送达</a></li>
+        <li role="presentation"><a href="{% url 'order:order' status=2 %}">以送达</a></li>
+        <script>
+            $(".act li:eq('{{ pos }}')").addClass('active')
+        </script>
+    </ul>
+</div>
+<br>
+{# 订单展示 #}
+<div class="container">
+    {# 展示订单 #}
+    <div class="row">
+        {% for order  in pager.object_list %}
+            <div class="col-lg-12">
+                <table class="table table-hover">
+                    <tr class="active">
+                        <td>{{ order.o_time }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    {% for orderfood in orderfoods %}
+                        {% if orderfood.order_id == order %}
+                            <tr>
+                                <td class="col-lg-3"><img style="width: 70px;height: 70px;"
+                                                          src="{{ orderfood.food_id.food_img }}"
+                                                          alt="1"></td>
+                                <td>{{ orderfood.food_id.food_name }}</td>
+                                <td>{{ orderfood.food_id.food_price }}元×{{ orderfood.of_food_num }}个</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            总价：{{ order.o_price }}&nbsp;
+                            {% if order.o_status == 0 %}
+                                <button type="button" class="btn btn-primary fk" value="{{ order.o_status }}">付款
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-primary yfk" value="{{ order.o_status }}">已付款
+                                </button>
+                            {% endif %}
+                            <input class="a" type="hidden" value="{{ order.oid }}">
+                        </td>
+                    </tr>
+                </table>
+                <br>
+            </div>
+        {% endfor %}
+    </div>
+
+    {#分页#}
+    <span>共 <b>{{ paginator.count }}</b> 条 每页 <b>{{ paginator.per_page }}</b>条
+        {{ pager.number }}/{{ paginator.num_pages }}</span>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if pager.has_previous %}
+                <li><a href="{% url 'order:order' status=0 page=pager.previous_page_number %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span></a></li>
+            {% else %}
+                <li class="disabled"><a href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span></a></li>
+            {% endif %}
+            {% for current in pager.page_range %}
+                {% if pager.number == current %}
+                    <li class="active"><a href="{% url 'order:order' status=0 page=current %}">{{ current }}</a></li>
+                {% else %}
+                    <li><a href="{% url 'order:order' status=0 page=current %}">{{ current }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if pager.has_next %}
+                <li><a href="{% url 'order:order' status=0 page=pager.next_page_number %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span></a></li>
+            {% else %}
+                <li class="disabled"><a href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+<script>
+    let a = function () {
+        $.ajax({
+            type: "POST",
+            url: "{% url 'order:payOrder' %}",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}', oid: $(this).next().val(), status: $(this).val()},
+            success: function (data) {
+                alert(data['msg']);
+            }
+        });
+    }
+    $('.fk').click(a)
+    $('.yfk').addClass('disabled').off()
+</script>
+</body>
+</html>

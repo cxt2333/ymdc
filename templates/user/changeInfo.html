@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户信息修改</title>
+    <link type="text/css" rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap-theme.min.css">
+    <script type="text/javascript" src="/static/bootstrap-3.3.7-dist/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="/static/css/mycss.css">
+    <style type="text/css">
+        .basic-grey {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 500px;
+        {#background: #F7F7F7;#} padding: 25px 15px 25px 10px;
+            font: 12px Georgia, "Times New Roman", Times, serif;
+            color: #080808;
+            text-shadow: 1px 1px 1px #FFF;
+            border: 1px solid #E4E4E4;
+        }
+
+        .basic-grey h1 {
+            font-size: 30px;
+            padding: 0px 0px 10px 40px;
+            display: block;
+            border-bottom: 1px solid #E4E4E4;
+            margin: -10px -15px 30px -10px;;
+            color: #080808;
+        }
+
+        .basic-grey h1 > span {
+            display: block;
+            font-size: 20px;
+        }
+
+        .basic-grey label {
+            display: block;
+            margin: 15px;
+        }
+
+        .basic-grey label > span {
+            float: left;
+            width: 20%;
+            text-align: right;
+            padding-right: 10px;
+            margin-top: 10px;
+            color: #080808;
+            font-size: 15px;
+        }
+
+        .basic-grey input[type="text"], .basic-grey input[type="email"], .basic-grey textarea, .basic-grey select {
+            border: 1px solid #DADADA;
+            color: #080808;
+            height: 30px;
+            margin-bottom: 16px;
+            margin-right: 6px;
+            margin-top: 2px;
+            outline: 0 none;
+            padding: 3px 3px 3px 5px;
+            width: 70%;
+            font-size: 12px;
+            line-height: 15px;
+            box-shadow: inset 0px 1px 4px #ECECEC;
+            -moz-box-shadow: inset 0px 1px 4px #ECECEC;
+            -webkit-box-shadow: inset 0px 1px 4px #ECECEC;
+        }
+
+        .basic-grey textarea {
+            padding: 5px 3px 3px 5px;
+        }
+
+        .basic-grey select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            text-indent: 0.01px;
+            text-overflow: '';
+            width: 70%;
+            height: 35px;
+            line-height: 25px;
+        }
+
+        .basic-grey textarea {
+            height: 100px;
+        }
+
+        .basic-grey .button {
+            background: #E27575;
+            border: none;
+            padding: 10px 25px 10px 25px;
+            color: #FFF;
+            box-shadow: 1px 1px 5px #B6B6B6;
+            border-radius: 3px;
+            text-shadow: 1px 1px 1px #9E3F3F;
+            cursor: pointer;
+        }
+
+        .basic-grey .button:hover {
+            background: #CF7A7A
+        }
+    </style>
+</head>
+<body style="background-size: 100%" background="/static/webImage/info1.jpg">
+{# ~置顶导航栏 #}
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <ul class="container nav nav-pills">
+        <li role="presentation">
+            <div class="navbar-header col-lg-1">
+                <img alt="Brand" src="/static/image/logo.png">
+            </div>
+        </li>
+        <li role="presentation">
+            <a href="{% url 'home:home' %}">商品</a>
+        </li>
+        <li role="presentation">
+            <a href="{% url 'cart:cart' %}">购物车</a>
+        </li>
+        <li role="presentation">
+            <a href="{% url 'order:order' %}">订单</a>
+        </li>
+        <li role="presentation" class="dropdown navbar-right">
+            {% if request.user.is_authenticated %}
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                   aria-expanded="false">用户：{{ request.user.username }}<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url 'user:info' %}">用户信息</a></li>
+                    <li><a href="{% url 'user:logout' %}">退出登录</a></li>
+                </ul>
+            {% else %}
+                <a href="{% url 'order:order' %}">账号未登录，点击登录或注册</a>
+            {% endif %}
+        </li>
+    </ul>
+</div>
+<div class="col-lg-6">
+    <form action="{% url 'user:changeInfo' %}" method="post" class="basic-grey">
+        {% csrf_token %}
+        <h1>用户信息
+            <span>Your personal information display!</span>
+        </h1>
+        <input type="hidden" name="uid" value="{{ request.user.uid }}">
+        <label>
+            <span>用户名:</span>
+            <input id="name" type="text" name="username" value="{{ username }}"/>
+            <span></span>{{ form.username.errors }}
+        </label>
+        <label>
+            <span>邮箱:</span>
+            <input id="name" type="text" name="email" value="{{ email }}"/>
+            <span></span>{{ form.email.errors }}
+        </label>
+        <label>
+            <span>手机号:</span>
+            <input id="name" type="text" name="phone" value="{{ phone }}"/>
+            <span></span>{{ form.phone.errors }}
+        </label>
+        <label>
+            <span>性别:</span>
+            {% if sex %}
+                <input id="name" type="radio" name="sex" value="0"/>男
+                <input id="name" type="radio" name="sex" value="1" checked="checked"/>女
+            {% else %}
+                <input id="name" type="radio" name="sex" value="0" checked="checked"/>男
+                <input id="name" type="radio" name="sex" value="1"/>女
+            {% endif %}
+            {{ form.sex.errors }}
+        </label>
+        <br>
+        <label class="row">
+            <span>&nbsp;</span>
+            <input type="submit" class="button" value="修改信息"/>
+        </label>
+    </form>
+</div>
+</body>
+</html>

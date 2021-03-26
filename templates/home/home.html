@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link type="text/css" rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="/static/bootstrap-3.3.7-dist/css/bootstrap-theme.min.css">
+    <script type="text/javascript" src="/static/bootstrap-3.3.7-dist/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="/static/css/mycss.css">
+    <style type="text/css">
+        .btn-circle {
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            padding: 6px 0;
+            font-size: 12px;
+            line-height: 1.428571429;
+            border-radius: 15px;
+        }
+
+        .limit {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+{# ~置顶导航栏 #}
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <ul class="container nav nav-pills">
+        <li role="presentation">
+            <div class="navbar-header col-lg-1">
+                <img alt="Brand" src="/static/image/logo.png">
+            </div>
+        </li>
+        <li role="presentation" class="active">
+            <a href="{% url 'home:home' %}">商品</a>
+        </li>
+        <li role="presentation">
+            <a href="{% url 'cart:cart' %}">购物车</a>
+        </li>
+        <li role="presentation">
+            <a href="{% url 'order:order' %}">订单</a>
+        </li>
+        <li role="presentation" class="dropdown navbar-right">
+            {% if request.user.is_authenticated %}
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                   aria-expanded="false">用户：{{ request.user.username }}<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url 'user:info' %}">用户信息</a></li>
+                    <li><a href="{% url 'user:logout' %}">退出登录</a></li>
+                </ul>
+            {% else %}
+                <a href="{% url 'order:order' %}">账号未登录，点击登录或注册</a>
+            {% endif %}
+        </li>
+    </ul>
+</div>
+{# 食物分类 #}
+<div class="container" style="text-align: center;">
+    <ul class="nav nav-pills act" style="display: inline-block;float: none;">
+        {% for ft in foodtypes %}
+            <li role="presentation"><a href="{% url 'home:home' tid=ft.tid %}">{{ ft.type_name }}</a></li>
+        {% endfor %}
+        <script>
+            $(".act li:eq({{ pos }})").addClass('active')
+        </script>
+    </ul>
+    <br><br>
+</div>
+{# 食物展示 #}
+<div class="container">
+    {#展示食物#}
+    <div class="row">
+        {% for food  in pager.object_list %}
+            <div class="col-lg-3">
+                <div class="thumbnail">
+                    <img style="width: 250px;height: 250px" src="{{ food.food_img }}" alt="1">
+                    <div class="caption">
+                        <h3 class="limit">{{ food.food_name }}</h3>
+                        <p class="limit">{{ food.food_describe }}</p>
+                        <p>售价{{ food.food_price }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;已售{{ food.sell_num }}</p>
+                        <p>
+                            <button type="button" class="btn btn-warning btn-circle subFood">
+                                <span class="glyphicon glyphicon-chevron-left"></span>
+                            </button>
+                            <strong class="food_num">1</strong>
+                            <button type="button" class="btn btn-warning btn-circle addFood">
+                                <span class="glyphicon glyphicon-chevron-right"></span>
+                            </button>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <button type="button" class="btn btn-info addCart" value="{{ food.fid }}">
+                                加入购物车<span class="glyphicon glyphicon-shopping-cart"></span>
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {#分页#}
+    <span>共 <b>{{ paginator.count }}</b> 条 每页 <b>{{ paginator.per_page }}</b>条
+        {{ pager.number }}/{{ paginator.num_pages }}</span>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if pager.has_previous %}
+                <li><a href="{% url 'home:home' tid=tid page=pager.previous_page_number %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span></a></li>
+            {% else %}
+                <li class="disabled"><a href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span></a></li>
+            {% endif %}
+            {% for current in pager.page_range %}
+                {% if pager.number == current %}
+                    <li class="active"><a href="{% url 'home:home' tid=tid page=current %}">{{ current }}</a></li>
+                {% else %}
+                    <li><a href="{% url 'home:home' tid=tid page=current %}">{{ current }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if pager.has_next %}
+                <li><a href="{% url 'home:home' tid=tid page=pager.next_page_number %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span></a></li>
+            {% else %}
+                <li class="disabled"><a href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+<script>
+    $('.addCart').click(function () {
+        $.ajax({
+            type: "POST",
+            url: "{% url 'cart:addCart' %}",
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}', id: $(this).val(), foodNum: $(this).prev().prev().html()},
+            success: function (data) {
+                alert(data['msg']);
+            }
+        });
+    })
+
+    $('.addFood').click(function () {
+        let num = $(this).prev().html() * 1
+        $(this).prev().html(num + 1)
+    })
+
+    $('.subFood').click(function () {
+        let num = $(this).next().html() * 1
+        if (num != 1)
+            $(this).next().html(num - 1)
+    })
+</script>
+</body>
+</html>
