@@ -1,7 +1,8 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 # Create your views here.
+from django.urls import reverse
 from django.views.generic.base import View
 
 from user.models import Cart, Foods
@@ -10,7 +11,8 @@ from user.models import Cart, Foods
 class CartListView(View):
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return render(request, 'user/login.html', {'msg': '您尚未登录，请登录后访问购物车'})
+            return redirect(reverse('user:login', args=[1]))
+            render(request, 'user/login.html', {'msg': '您尚未登录，请登录后访问购物车'})
         carts = Cart.objects.filter(user_id=request.user.uid, c_is_select=1)
         allprice = self.compute(carts)
         return render(request, 'cart/cart.html', locals())
@@ -47,9 +49,31 @@ class AddCartView(View):
         else:
             # 没有该商品，添加该商品
             cart = Cart()
-            cart.c_food_num = 1
+            cart.c_food_num = int(food_num)
             cart.c_is_select = 1
             cart.food_id = food
             cart.user_id = user
             cart.save()
         return JsonResponse({'msg': '加入购物车成功'})
+
+
+class ChangeCartNumView(View):
+    def get(self, request, cid, num):
+        cart = Cart.objects.get(cid=cid)
+        if num == 0:
+            cart.c_food_num -= 1
+            if cart.c_food_num == 0:
+                cart.delete()
+            else:
+                cart.save()
+        else:
+            cart.c_food_num += 1
+            cart.save()
+        return redirect(reverse('cart:cart'))
+
+
+class DelCartView(View):
+    def get(self, request, cid):
+        cart = Cart.objects.get(cid=cid)
+        cart.delete()
+        return redirect(reverse('cart:cart'))

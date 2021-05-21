@@ -35,8 +35,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'captcha',
     'user',
     'home',
+    'cart',
+    'order',
+
 ]
 
 MIDDLEWARE = [
@@ -80,7 +84,7 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'USER': 'root',
         'PASSWORD': '123456',
-        'PORT': 3306,
+        'PORT': '3306',
     }
 }
 
@@ -148,3 +152,20 @@ ORDER_STATUS_NOT_PAY = 0
 ORDER_STATUS_PAY = 1
 # 已送到
 ORDER_over = 2
+
+# 图形验证码配置
+# 证码设置
+CAPTCHA_IMAGESIZE = (8, 45)  # 设置captcha图片大小
+
+CAPTCHA_LENGTH = 4  # 字符个数
+CAPTCHA_TIMEOUT = 1  # 超时(minutes)*
+
+# 输出格式：输入框验证码图片隐藏域•
+# '%(image)s %(hidden_field)s %(text_field)s'
+CAPTCHA_OUTPUT_FORMAT = '%(image)s %(hidden_field)s %(text_field)s'
+CAPTCHA_NOISE_FUNCTIONS = (
+    'captcha.helpers.noise_null',
+    'captcha.helpers.noise_arcs',
+    'captcha.helpers.noise_dots',
+)
+CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'

@@ -31,18 +31,24 @@ class HomeView(View):
         return render(request, 'home/home.html', locals())
 
     def post(self, request, *args, **kwargs):
-        # categories = Type.objects.all()
-        # # 获取所有分类id
-        # postion = [cat.cid for cat in categories]
-        #
-        # cid = int(request.POST.get('cid', -1))
-        # keyword = request.POST.get('keyword', '')
-        # # 文章检索
-        # articles = Foods.objects.filter(cid=cid, title__icontains=keyword)
-        #
-        # pos = postion.index(cid)
-        #
-        # paginator = BaiduPaginator(articles, 3)
-        # pager = paginator.page(page)
-        # pager.page_range = paginator.custom_range(paginator.num_pages, page, 3)
-        return render(request, 'wenzhang_xinwen.html', locals())
+        foodtypes = Type.objects.all()
+        # 获取所有分类id
+        postion = [ft.tid for ft in foodtypes]
+
+        tid = int(request.POST.get('tid', 0))
+        keyword = request.POST.get('keyword', '')
+
+        # 食品检索
+        foods = Foods.objects.filter(food_name__icontains=keyword)
+
+        # pos = postion.index(tid)
+        # if tid == 0:
+        #     foods = food.all()
+        # else:
+        #     # food检索
+        #     foods = food.filter(type_id=tid)
+        page = 1
+        paginator = BaiduPaginator(foods, 3)
+        pager = paginator.page(page)
+        pager.page_range = paginator.custom_range(paginator.num_pages, page, 3)
+        return render(request, 'home/home.html', locals())

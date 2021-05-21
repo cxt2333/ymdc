@@ -1,7 +1,8 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 # Create your views here.
+from django.urls import reverse
 from django.views.generic.base import View
 
 from home.tools import BaiduPaginator
@@ -12,7 +13,7 @@ from ymdc import settings
 class OrderListView(View):
     def get(self, request, status=-1, page=1):
         if not request.user.is_authenticated:
-            return render(request, 'user/login.html', {'msg': '您尚未登录，请登录后访问订单'})
+            return redirect(reverse('user:login', args=[2]))
         if status < 0:
             orders = Order.objects.filter(user_id=request.user.uid)
         else:
@@ -41,7 +42,7 @@ class AddOrderView(View):
 
         # 购物车商品添加到订单商品表
         self.add_to_orderfoods(my_order, carts)
-        return render(request, 'order/order.html')
+        return redirect(reverse('order:order', args=[0]))
 
     # 计算购物中用户所选商品总价
     def compute(self, carts):
@@ -69,5 +70,7 @@ class PayOrderView(View):
         # 获取订单id与状态
         order_id = request.POST.get('oid')
         status = request.POST.get('status')
-        print(order_id, status)
+        order = Order.objects.get(oid=order_id)
+        order.o_status = 1
+        order.save()
         return JsonResponse({'msg': '支付成功'})

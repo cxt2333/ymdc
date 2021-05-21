@@ -22,6 +22,7 @@ urlpatterns = [
     # 账号
     path('register/', views.UserRegisterView.as_view(), name='register'),
     path('login/', views.UserLoginView.as_view(), name='login'),
+    path('login/<int:tip>/', views.UserLoginView.as_view(), name='login'),
     path('logout/', views.user_logout, name='logout'),
     # 邮箱验证
     path('active/<token>', views.active_user, name='active'),

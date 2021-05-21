@@ -26,4 +26,6 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     # 订单
     path('order/', include('order.urls')),
+    # 图片验证码 路由
+    path('captcha/', include('captcha.urls'))
 ]

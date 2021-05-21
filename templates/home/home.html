@@ -53,10 +53,26 @@
                     <li><a href="{% url 'user:logout' %}">退出登录</a></li>
                 </ul>
             {% else %}
-                <a href="{% url 'order:order' %}">账号未登录，点击登录或注册</a>
+                <a href="{% url 'user:login' %}">账号未登录，点击登录或注册</a>
             {% endif %}
         </li>
     </ul>
+</div>
+
+{# 食物搜索 #}
+<div class="container" style="text-align: right;">
+    <form class="form-inline" action="{% url 'home:home' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="sr-only" for="exampleInputAmount">输入关键字 (in dollars)</label>
+            <div class="input-group">
+                <input type="text" name="keyword" value="" class="form-control col-lg-3" id="exampleInputAmount"
+                       placeholder="输入关键字">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">搜索</button>
+    </form>
+    <br>
 </div>
 {# 食物分类 #}
 <div class="container" style="text-align: center;">
@@ -70,6 +86,8 @@
     </ul>
     <br><br>
 </div>
+
+
 {# 食物展示 #}
 <div class="container">
     {#展示食物#}

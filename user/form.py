@@ -2,6 +2,7 @@
 # 学校：闽江学院
 # 编写人：陈端倪
 # 开发时间：2021/3/16 15:16
+from captcha.fields import CaptchaField
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -86,3 +87,7 @@ class ChangeForm(forms.Form):
                 if username == user.username:
                     raise ValidationError('用户名重复')
         return username
+
+
+class LoginCaptchaForm(forms.Form):
+    captcha = CaptchaField()  # 验证码字段

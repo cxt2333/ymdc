@@ -13,6 +13,16 @@
             width: 70px;
             height: 70px;
         }
+
+        .btn-circle {
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            padding: 6px 0;
+            font-size: 12px;
+            line-height: 1.428571429;
+            border-radius: 15px;
+        }
     </style>
 </head>
 <body>
@@ -50,11 +60,11 @@
 <div class="container">
     <table class="table table-striped table-hover">
         <tr>
-            <td>图片</td>
-            <td>名字</td>
-            <td>价格</td>
-            <td>数量</td>
-            <td>操作</td>
+            <td class="col-lg-2">图片</td>
+            <td class="col-lg-3">名字</td>
+            <td class="col-lg-2">价格</td>
+            <td class="col-lg-2">数量</td>
+            <td class="col-lg-3">操作</td>
         </tr>
         {% for cart in carts %}
             <tr>
@@ -62,7 +72,18 @@
                 <td style="vertical-align:middle;">{{ cart.food_id.food_name }}</td>
                 <td style="vertical-align:middle;">{{ cart.food_id.food_price }}</td>
                 <td style="vertical-align:middle;">{{ cart.c_food_num }}</td>
-                <td style="vertical-align:middle;">删除</td>
+                <td style="vertical-align:middle;">
+                    <a href="{% url 'cart:changeCartNum' cid=cart.cid num=0 %}" type="button"
+                       class="btn btn-warning btn-circle">
+                        <span class="glyphicon glyphicon-chevron-left"></span>
+                    </a>
+                    <a href="{% url 'cart:changeCartNum' cid=cart.cid num=1 %}" type="button"
+                       class="btn btn-warning btn-circle">
+                        <span class="glyphicon glyphicon-chevron-right"></span>
+                    </a>
+                    <a href="{% url 'cart:delCart' cid=cart.cid %}" type="button"
+                       class="btn btn-info">删除</a>
+                </td>
             </tr>
         {% endfor %}
     </table>

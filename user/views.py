@@ -1,3 +1,5 @@
+from captcha.helpers import captcha_image_url
+from captcha.models import CaptchaStore
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
@@ -7,7 +9,7 @@ from django.template import loader
 from django.urls import reverse
 from django.views.generic.base import View
 
-from user.form import RegisterForm, ChangeForm
+from user.form import RegisterForm, ChangeForm, LoginCaptchaForm
 
 # Create your views here.
 from user.models import User
@@ -17,9 +19,25 @@ from ymdc.settings import EMAIL_FROM
 
 class UserRegisterView(View):
     def get(self, request, *args, **kwargs):
-        return render(request, 'templates/user/register.html')
+        # 生成hashkey和image_url
+        new_key = CaptchaStore.pick()  # 生成hashkey
+        image_url = captcha_image_url(new_key)  # 生成验证码图片url地址
+        return render(request, 'templates/user/register.html', locals())
 
     def post(self, request, *args, **kwargs):
+        yzm = request.POST.get('yzm', '')
+        hashkey = request.POST.get('code')
+        # 根据key获取验证码对象
+        cap = CaptchaStore.objects.filter(hashkey=hashkey).first()
+
+        # 生成hashkey和image_url
+        new_key = CaptchaStore.pick()  # 生成hashkey
+        image_url = captcha_image_url(new_key)  # 生成验证码图片url地址
+        if not cap:  # 不存在
+            return render(request, 'user/register.html', {'new_key': new_key, 'image_url': image_url, 'yzm': '验证码错误'})
+        if cap.response != yzm.lower():
+            return render(request, 'user/register.html', {'new_key': new_key, 'image_url': image_url, 'yzm': '验证码错误'})
+
         # 用提交的数据生成表单
         form = RegisterForm(request.POST)
         # 能通过验证，返回True，否则放回False
@@ -43,25 +61,48 @@ class UserRegisterView(View):
                 send_mail('账号激活', '', EMAIL_FROM, [user.email], html_message=html)
                 return HttpResponse('激活邮件已发送，请登录邮箱确认激活,完成账号注册')
             else:
-                return render(request, 'templates/user/register.html', {'form': form})
+                return render(request, 'templates/user/register.html',
+                              {'form': form, 'new_key': new_key, 'image_url': image_url})
         else:
             # 验证不成功，把错误信息渲染到前端界面
-            return render(request, 'templates/user/register.html', {'form': form})
+            return render(request, 'templates/user/register.html',
+                          {'form': form, 'new_key': new_key, 'image_url': image_url, })
 
 
 class UserLoginView(View):
-    def get(self, request, *args, **kwargs):
-        return render(request, 'templates/user/login.html')
+    def get(self, request, tip=0):
+        # 生成hashkey和image_url
+        new_key = CaptchaStore.pick()  # 生成hashkey
+        image_url = captcha_image_url(new_key)  # 生成验证码图片url地址
+        if tip == 1:
+            msg = '您尚未登录，请登录后访问购物车'
+        elif tip == 2:
+            msg = '您尚未登录，请登录后访问订单'
+        return render(request, 'templates/user/login.html', locals())
 
     def post(self, request, *args, **kwargs):
+        yzm = request.POST.get('yzm', '')
+        hashkey = request.POST.get('code')
+        # 根据key获取验证码对象
+        cap = CaptchaStore.objects.filter(hashkey=hashkey).first()
+
+        # 生成hashkey和image_url
+        new_key = CaptchaStore.pick()  # 生成hashkey
+        image_url = captcha_image_url(new_key)  # 生成验证码图片url地址
+        if not cap:  # 不存在
+            return render(request, 'user/login.html', {'msg': '验证码错误', 'new_key': new_key, 'image_url': image_url})
+        if cap.response != yzm.lower():
+            return render(request, 'user/login.html', {'msg': '验证码错误', 'new_key': new_key, 'image_url': image_url})
+
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
         try:
             user_active = User.objects.get(username=username)
         except:
-            return render(request, 'user/login.html', {'msg': '用户名或密码错误'})
+            return render(request, 'user/login.html', {'msg': '用户名或密码错误', 'new_key': new_key, 'image_url': image_url})
         if not user_active.is_active:
-            return render(request, 'user/login.html', {'msg': '账号未激活，请查看注册邮箱激活账号'})
+            return render(request, 'user/login.html',
+                          {'msg': '账号未激活，请查看注册邮箱激活账号', 'new_key': new_key, 'image_url': image_url})
         # 用户验证，如果用户名和密码真确，放回User对象，否则放回None
         user = authenticate(request, username=username, password=password)
         if user:
@@ -69,7 +110,7 @@ class UserLoginView(View):
             login(request, user)
             return redirect(reverse('home:home'))
         else:
-            return render(request, 'user/login.html', {'msg': '用户名或密码错误'})
+            return render(request, 'user/login.html', {'msg': '用户名或密码错误', 'new_key': new_key, 'image_url': image_url})
 
 
 def user_logout(request):
@@ -98,6 +139,7 @@ def active_user(request, token):
     return render(request, 'user/login.html', {'msg': '用户已激活，请登录系统'})
 
 
+# 用户信息修改回显
 @login_required(login_url='/user/login/')
 def userInfo(request):
     username = request.user.username
